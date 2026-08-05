@@ -22,26 +22,43 @@ Post, reply, and upload files to the TuyaOpen Discourse forum — straight from 
 
 ### Installation
 
-**Option A — One-liner (recommended):**
+#### One-liner (recommended)
+
+**Linux / macOS:**
 ```bash
 curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash
 ```
 
-**Option B — pipx:**
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.ps1 | iex
+```
+
+The installer automatically installs `tuya-df`, Playwright + Chromium, and the Claude Code skill (if Claude Code is detected).
+
+#### pipx
+
 ```bash
 pipx install "git+https://github.com/maidang-xing/tuya-df.git"
 pipx inject tuya-df playwright
 python -m playwright install chromium
 ```
 
-**Option C — from source:**
+#### From source
+
 ```bash
 git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[browser]"
 python -m playwright install chromium
 ```
+
+#### AI Agent install (one prompt)
+
+Paste this prompt to Claude Code, Codex, or any AI agent — it installs the tool, skill, and sets up auth automatically. See [AGENT_INSTALL.md](AGENT_INSTALL.md) for details:
+
+> Install the tuya-df Discourse Forum CLI tool and its Claude Code skill. Detect the OS and run the appropriate installer (Linux/macOS: `curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash`; Windows: `irm https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.ps1 | iex`). Verify with `tuya-df --version`. Then run `tuya-df auth login` for the user to log in. Finally verify with `tuya-df auth status --json` and `tuya-df categories --json`.
 
 ### Quick Start
 
@@ -175,26 +192,43 @@ cp -r .claude/skills/tuya-df ~/.claude/skills/
 
 ### 安装
 
-**方式 A — 一键安装（推荐）：**
+#### 一键安装（推荐）
+
+**Linux / macOS：**
 ```bash
 curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash
 ```
 
-**方式 B — pipx：**
+**Windows（PowerShell）：**
+```powershell
+irm https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.ps1 | iex
+```
+
+安装脚本会自动安装 `tuya-df`、Playwright + Chromium，以及 Claude Code Skill（如果检测到 Claude Code）。
+
+#### pipx
+
 ```bash
 pipx install "git+https://github.com/maidang-xing/tuya-df.git"
 pipx inject tuya-df playwright
 python -m playwright install chromium
 ```
 
-**方式 C — 从源码安装：**
+#### 从源码安装
+
 ```bash
 git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[browser]"
 python -m playwright install chromium
 ```
+
+#### AI Agent 安装（一句话提示词）
+
+把下面的提示词粘贴给 Claude Code、Codex 或任何 AI Agent——它会自动安装工具、Skill 并设置认证。详见 [AGENT_INSTALL.md](AGENT_INSTALL.md)：
+
+> 安装 tuya-df 论坛 CLI 工具和 Claude Code Skill。检测操作系统并运行对应的安装脚本（Linux/macOS: `curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash`；Windows: `irm https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.ps1 | iex`）。安装后运行 `tuya-df --version` 验证，然后运行 `tuya-df auth login` 让用户登录论坛，最后用 `tuya-df auth status --json` 和 `tuya-df categories --json` 确认一切正常。
 
 ### 快速开始
 
