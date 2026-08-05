@@ -33,7 +33,8 @@ class DiscourseClient:
 
     MAX_RETRIES = 3
     BACKOFF_BASE = 5  # seconds
-    MIN_REQUEST_GAP = 3.0  # min seconds between POST/PUT requests (anti-spam)
+    MIN_REQUEST_GAP = 5.0  # min seconds between POST/PUT requests (anti-spam)
+    POST_COOLDOWN = 60.0  # min seconds between topic/reply creations (Discourse anti-spam window)
 
     def __init__(self, credentials: Credentials, timeout: int = 30):
         self.base_url = credentials.forum_url.rstrip("/")
@@ -56,6 +57,7 @@ class DiscourseClient:
 
         self._csrf_token: str | None = None
         self._last_write_time: float = 0.0  # for rate limiting POST/PUT
+        self._last_post_time: float = 0.0  # for post creation cooldown
 
     def _extract_domain(self) -> str:
         """Extract hostname from forum URL for cookie domain."""
@@ -86,6 +88,45 @@ class DiscourseClient:
             wait = self.MIN_REQUEST_GAP - elapsed
             time.sleep(wait)
         self._last_write_time = time.time()
+
+    def _throttle_posts(self) -> None:
+        """Enforce minimum delay between topic/reply creations.
+
+        Discourse's "typed too fast" anti-spam checks operate on a ~60s window.
+        This prevents consecutive post creations from triggering auto-silencing.
+        """
+        now = time.time()
+        elapsed = now - self._last_post_time
+        if elapsed < self.POST_COOLDOWN:
+            wait = self.POST_COOLDOWN - elapsed
+            print(f"⏳ Cooling down {wait:.0f}s before next post (anti-spam)...", flush=True)
+            time.sleep(wait)
+        self._last_post_time = time.time()
+
+    def _check_silenced(self) -> None:
+        """Check if the current user is silenced/suspended before posting.
+
+        Raises DiscourseError early to avoid wasting requests and aggravating
+        the account's standing.
+        """
+        try:
+            resp = self._session.get(
+                f"{self.base_url}/session/current.json",
+                timeout=self.timeout,
+            )
+            if resp.ok:
+                user = resp.json().get("current_user", {})
+                if user.get("silenced_till") or user.get("silenced"):
+                    raise DiscourseError(
+                        "Your account is currently silenced. "
+                        "Posting is blocked to protect your account. "
+                        "Contact the forum administrator to restore access.",
+                        status_code=403,
+                    )
+        except DiscourseError:
+            raise
+        except Exception:
+            pass  # Non-critical — let the actual post attempt proceed
 
     def _request(
         self,
@@ -219,6 +260,9 @@ class DiscourseClient:
         """Upload a file to Discourse. Returns upload response with url/short_url."""
         import os
 
+        # Throttle: uploads are write requests too
+        self._throttle_writes("POST")
+
         # Ensure CSRF for cookie auth
         if self.credentials.is_cookie:
             self._ensure_csrf()
@@ -267,6 +311,8 @@ class DiscourseClient:
         tags: list[str] | None = None,
     ) -> dict:
         """Create a new topic."""
+        self._throttle_posts()
+        self._check_silenced()
         data: dict[str, Any] = {
             "title": title,
             "raw": raw,
@@ -278,6 +324,8 @@ class DiscourseClient:
 
     def create_post(self, topic_id: int, raw: str) -> dict:
         """Reply to an existing topic."""
+        self._throttle_posts()
+        self._check_silenced()
         return self.post("/posts.json", data={"topic_id": topic_id, "raw": raw})
 
     def get_latest_topics(self, category: str | None = None, limit: int = 5) -> dict:

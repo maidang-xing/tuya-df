@@ -4,9 +4,18 @@ import json
 import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from tuya_df.config import Credentials
+
+
+@pytest.fixture(autouse=True)
+def disable_throttling(monkeypatch):
+    """Disable all throttling/cooldown/silence-check for tests."""
+    monkeypatch.setattr("tuya_df.client.DiscourseClient.MIN_REQUEST_GAP", 0.0)
+    monkeypatch.setattr("tuya_df.client.DiscourseClient.POST_COOLDOWN", 0.0)
+    monkeypatch.setattr("tuya_df.client.DiscourseClient._throttle_posts", lambda self: None)
+    monkeypatch.setattr("tuya_df.client.DiscourseClient._check_silenced", lambda self: None)
 
 
 @pytest.fixture
