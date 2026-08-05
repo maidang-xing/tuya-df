@@ -113,11 +113,13 @@ def generate_embed_markdown(
     filename = os.path.basename(file_path)
     stem = Path(file_path).stem
 
-    short_url = upload_result.get("short_url", "")
-    full_url = upload_result.get("url", "")
+    short_url = upload_result.get("short_url") or ""
+    full_url = upload_result.get("url") or ""
+    # Fallback: if no short_url, use full_url for image/attachment embeds
+    embed_url = short_url or full_url
 
     if file_type == "image":
-        return f"![{stem}]({short_url})"
+        return f"![{stem}]({embed_url})"
 
     elif file_type == "video":
         # Discourse renders <video> tags in posts
@@ -125,4 +127,4 @@ def generate_embed_markdown(
 
     else:
         # Attachment link
-        return f"[{filename}|attachment]({short_url})"
+        return f"[{filename}|attachment]({embed_url})"
