@@ -24,7 +24,7 @@ Post, reply, and upload files to the TuyaOpen Discourse forum — straight from 
 
 ```bash
 # 1. Install
-git clone https://github.com/<your-username>/tuya-df.git
+git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[browser]"
@@ -145,7 +145,7 @@ New users' posts enter a moderation queue. `tuya-df` will detect this and show a
 
 ```bash
 # 1. 安装
-git clone https://github.com/<your-username>/tuya-df.git
+git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[browser]"
