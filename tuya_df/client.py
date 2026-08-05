@@ -124,15 +124,18 @@ class DiscourseClient:
 
         for attempt in range(self.MAX_RETRIES):
             try:
-                resp = self._session.request(
-                    method,
-                    url,
-                    params=params,
-                    data=data if data else json_body,
-                    files=files,
-                    headers=headers,
-                    timeout=self.timeout,
-                )
+                kwargs: dict[str, Any] = {
+                    "params": params,
+                    "files": files,
+                    "headers": headers,
+                    "timeout": self.timeout,
+                }
+                if data:
+                    kwargs["data"] = data
+                elif json_body:
+                    kwargs["json"] = json_body
+
+                resp = self._session.request(method, url, **kwargs)
             except requests.ConnectionError as exc:
                 raise DiscourseError(f"Network error: {exc}", status_code=0) from exc
             except requests.Timeout as exc:
@@ -149,7 +152,9 @@ class DiscourseClient:
             if resp.status_code == 403 and self.credentials.is_cookie:
                 body_text = ""
                 try:
-                    body_text = resp.json().get("errors", [""])[0] if resp.json() else ""
+                    body_data = resp.json()
+                    errs = body_data.get("errors", [""])
+                    body_text = errs[0] if isinstance(errs, list) and errs else str(errs)
                 except Exception:
                     pass
                 if "csrf" in body_text.lower() and not retry:
