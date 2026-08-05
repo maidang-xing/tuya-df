@@ -6,12 +6,38 @@ it in all subsequent POST/PUT/DELETE requests.
 
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 from typing import Any
 
 import requests
 
-from .config import Credentials
+from .config import Credentials, CONFIG_DIR
+
+# Persistent state file for cross-process cooldown tracking
+_STATE_FILE = CONFIG_DIR / "state.json"
+
+
+def _load_state() -> dict:
+    """Load persistent state from disk."""
+    try:
+        if _STATE_FILE.exists():
+            return json.loads(_STATE_FILE.read_text())
+    except (json.JSONDecodeError, OSError):
+        pass
+    return {}
+
+
+def _save_state(data: dict) -> None:
+    """Save persistent state to disk."""
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        existing = _load_state()
+        existing.update(data)
+        _STATE_FILE.write_text(json.dumps(existing))
+    except OSError:
+        pass  # Non-critical — throttling falls back to no-op
 
 
 class DiscourseError(Exception):
@@ -93,15 +119,16 @@ class DiscourseClient:
         """Enforce minimum delay between topic/reply creations.
 
         Discourse's "typed too fast" anti-spam checks operate on a ~60s window.
-        This prevents consecutive post creations from triggering auto-silencing.
+        Time is persisted to disk so cooldown works across separate CLI invocations.
         """
+        last_post = _load_state().get("last_post_time", 0.0)
         now = time.time()
-        elapsed = now - self._last_post_time
+        elapsed = now - last_post
         if elapsed < self.POST_COOLDOWN:
             wait = self.POST_COOLDOWN - elapsed
             print(f"⏳ Cooling down {wait:.0f}s before next post (anti-spam)...", flush=True)
             time.sleep(wait)
-        self._last_post_time = time.time()
+        _save_state({"last_post_time": time.time()})
 
     def _check_silenced(self) -> None:
         """Check if the current user is silenced/suspended before posting.
