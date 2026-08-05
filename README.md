@@ -20,20 +20,36 @@ Post, reply, and upload files to the TuyaOpen Discourse forum — straight from 
 
 `tuya-df` is a command-line tool (like `gh` for GitHub) that lets you interact with the [TuyaOpen Discourse forum](https://forum-tuyaopen.discourse.group) without opening a browser. Create topics, reply to posts, and upload images/videos/files — all from the terminal. Designed for both humans and AI agents.
 
-### Quick Start (3 steps)
+### Installation
 
+**Option A — One-liner (recommended):**
 ```bash
-# 1. Install
+curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash
+```
+
+**Option B — pipx:**
+```bash
+pipx install "git+https://github.com/maidang-xing/tuya-df.git"
+pipx inject tuya-df playwright
+python -m playwright install chromium
+```
+
+**Option C — from source:**
+```bash
 git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[browser]"
 python -m playwright install chromium
+```
 
-# 2. Login (opens browser, one-time only)
+### Quick Start
+
+```bash
+# 1. Login (opens browser, one-time only)
 tuya-df auth login
 
-# 3. Post!
+# 2. Post!
 tuya-df post create --title "Hello TuyaOpen!" --body "My first CLI post." --category "show-tell"
 ```
 
@@ -131,6 +147,22 @@ tuya-df --json post create --title "Test" --body "Hello" --category 9
 
 New users' posts enter a moderation queue. `tuya-df` will detect this and show a clear message. Don't post too frequently — Discourse may auto-silence accounts that post too fast.
 
+### AI Tool Integration
+
+`tuya-df` is designed for AI agents (Claude Code, Codex, Cursor, etc.):
+
+- **`--json` output** on all commands — structured, parseable
+- **Standard exit codes** (0=success, 2=auth, 4=API error) — scriptable
+- **`.claude/skills/tuya-df/SKILL.md`** — drop-in skill for Claude Code
+- **`AGENTS.md`** — instructions file for any AI coding tool
+
+```bash
+# Claude Code: install the skill
+cp -r .claude/skills/tuya-df ~/.claude/skills/
+
+# Then ask Claude: "Post a topic to the forum about my new project"
+```
+
 ---
 
 <a id="中文"></a>
@@ -141,20 +173,36 @@ New users' posts enter a moderation queue. `tuya-df` will detect this and show a
 
 `tuya-df` 是一个命令行工具（类似 GitHub 的 `gh`），让你无需打开浏览器就能与 [TuyaOpen 论坛](https://forum-tuyaopen.discourse.group) 交互。发帖、回复、上传图片/视频/文件——全部在终端完成。同时为人类用户和 AI Agent 设计。
 
-### 一键使用（3 步）
+### 安装
 
+**方式 A — 一键安装（推荐）：**
 ```bash
-# 1. 安装
+curl -sSL https://raw.githubusercontent.com/maidang-xing/tuya-df/main/install.sh | bash
+```
+
+**方式 B — pipx：**
+```bash
+pipx install "git+https://github.com/maidang-xing/tuya-df.git"
+pipx inject tuya-df playwright
+python -m playwright install chromium
+```
+
+**方式 C — 从源码安装：**
+```bash
 git clone https://github.com/maidang-xing/tuya-df.git
 cd tuya-df
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[browser]"
 python -m playwright install chromium
+```
 
-# 2. 登录（会打开浏览器，只需一次）
+### 快速开始
+
+```bash
+# 1. 登录（会打开浏览器，只需一次）
 tuya-df auth login
 
-# 3. 发帖！
+# 2. 发帖！
 tuya-df post create --title "大家好！" --body "这是我的第一个 CLI 帖子。" --category "show-tell"
 ```
 
@@ -251,6 +299,37 @@ tuya-df --json post create --title "测试" --body "你好" --category 9
 ### 论坛新用户须知（Trust Level 0）
 
 新用户的帖子会进入审核队列。`tuya-df` 会自动检测并提示。请不要频繁发帖——Discourse 会自动禁言发帖过快的账号。
+
+### AI Tool Integration | AI 工具集成
+
+`tuya-df` is designed for AI agents. All commands support `--json` output and standard exit codes.
+
+**Claude Code:**
+```bash
+# Copy the skill into your Claude Code project
+cp -r .claude/skills/tuya-df ~/.claude/skills/
+
+# Then Claude can post to the forum directly in conversation
+```
+
+**Codex / Cursor / other agents:**
+```bash
+# AGENTS.md provides instructions for any AI coding tool
+# The agent reads it and knows how to call tuya-df commands
+```
+
+**Programmatic usage (Python):**
+```python
+from tuya_df.config import resolve_credentials
+from tuya_df.client import DiscourseClient
+
+creds = resolve_credentials()
+client = DiscourseClient(creds)
+result = client.create_topic("Hello", "Body text", category=9)
+print(result)
+```
+
+---
 
 ### 项目结构
 
