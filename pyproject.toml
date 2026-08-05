@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tuya-df"
+version = "0.1.0"
+description = "Discourse Forum CLI for TuyaOpen — post, reply, and upload from the command line."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+authors = [{name = "TuyaOpen Contributors"}]
+keywords = ["discourse", "forum", "cli", "tuya", "tuyaopen"]
+
+dependencies = [
+    "click>=8.1",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+browser = [
+    "playwright>=1.40",
+]
+dev = [
+    "pytest>=8.0",
+    "responses>=0.25",
+    "playwright>=1.40",
+]
+
+[project.scripts]
+tuya-df = "tuya_df.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["tuya_df*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
