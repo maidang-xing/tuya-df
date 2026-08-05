@@ -56,4 +56,18 @@ tuya-df upload ./photo.png --json
 - Categories: `show-tell` (id=9), `develop-questions` (id=8), `learn-tutorials` (id=11), `announcement` (id=6), `events-contests` (id=7)
 - Exit code 0 = success, 2 = auth error, 4 = API error
 - Response `pending_moderation: true` means the post is queued for approval (TL0 users)
-- Do not post more than once per 30 seconds — Discourse may silence accounts that post too fast
+
+## Anti-spam safety (built-in, automatic)
+
+The tool enforces multiple anti-spam layers automatically — you do NOT need to add delays yourself:
+
+1. **Post cooldown (60s)** — persisted to disk, works across separate CLI calls. If you try to post twice quickly, the tool waits automatically.
+2. **Write throttle (5s)** — minimum gap between all write requests including uploads.
+3. **Pre-post silence check** — aborts before posting if the account is already silenced.
+4. **Rate limit retry** — HTTP 429 triggers exponential backoff (5s → 10s → 20s).
+
+**Agent rules:**
+- NEVER issue multiple `post create`/`post reply` commands in parallel or rapid succession
+- Wait for each post command to fully complete before issuing the next
+- If you see "Cooling down" in stderr, the tool is handling it — just wait
+- If you see "silenced" in any error output, STOP immediately and inform the user

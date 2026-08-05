@@ -98,8 +98,24 @@ Always pass `--json` for structured output. Example success response:
 
 If `pending_moderation` is `true`, inform the user their post is awaiting moderator approval.
 
+## Anti-spam safety (built-in, automatic)
+
+The tool has multiple layers of protection against Discourse's auto-silencing:
+
+1. **Post cooldown (60s)** — enforced across separate CLI invocations via `~/.config/tuya-df/state.json`. If you run `post create` twice in a row, the second call will automatically wait 60 seconds. Do NOT try to work around this.
+2. **Write request throttle (5s)** — minimum gap between any POST/PUT/DELETE request, including uploads.
+3. **Pre-post silence check** — before each post, the tool checks if the account is already silenced and aborts early to avoid aggravating the situation.
+4. **Rate limit retry** — on HTTP 429, automatically backs off (5s → 10s → 20s).
+5. **TL0 user warning** — new users (Trust Level 0) are warned that posts enter moderation queue.
+
+**As an agent, you should:**
+- NEVER issue multiple `post create` or `post reply` commands in rapid succession
+- Wait for each post command to complete before issuing the next
+- If you see "Cooling down" or "silenced" messages, STOP and inform the user
+- Prefer batching content into a single post over making multiple posts
+
 ## Important
 
-- Do NOT post more than once per 30 seconds — Discourse auto-silences fast posting
 - If you get exit code 2, the session expired — tell the user to run `tuya-df auth login`
 - If you get exit code 4, show the error message from the JSON `error` field
+- If you see "silenced" in any error, STOP immediately and inform the user to contact the forum admin

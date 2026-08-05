@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import time
-from pathlib import Path
 from typing import Any
 
 import requests
@@ -83,7 +82,6 @@ class DiscourseClient:
 
         self._csrf_token: str | None = None
         self._last_write_time: float = 0.0  # for rate limiting POST/PUT
-        self._last_post_time: float = 0.0  # for post creation cooldown
 
     def _extract_domain(self) -> str:
         """Extract hostname from forum URL for cookie domain."""
